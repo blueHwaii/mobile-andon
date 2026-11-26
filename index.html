@@ -56,7 +56,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
           </svg>
         </button>
-        <button onclick="openLineModal()" title="라인/공정 관리" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+        <button onclick="openSettingsModal('lines')" title="라인/공정/태그 관리" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -75,7 +75,7 @@
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-bold text-slate-700">1. 발생 위치 선택</h2>
-          <button onclick="openLineModal()" class="text-xs font-semibold text-blue-600 hover:underline">+ 라인/공정 편집</button>
+          <button onclick="openSettingsModal('lines')" class="text-xs font-semibold text-blue-600 hover:underline">+ 라인/공정 편집</button>
         </div>
         <div class="grid grid-cols-2 gap-2.5">
           <div>
@@ -97,7 +97,10 @@
 
       <!-- 증상 태그 및 상세 메모 -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
-        <h2 class="text-sm font-bold text-slate-700">3. 증상 선택 및 상세 내용</h2>
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700">3. 증상 선택 및 상세 내용</h2>
+          <button onclick="openSettingsModal('tags')" class="text-xs font-semibold text-blue-600 hover:underline">+ 태그 편집</button>
+        </div>
         <div id="symptomTags" class="flex flex-wrap gap-1.5"></div>
         <textarea id="callMemo" rows="2" placeholder="추가 전달 사항을 입력하세요 (선택)" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
         <input id="callerName" type="text" placeholder="호출자 이름 (선택, 예: 홍길동)" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -177,16 +180,21 @@
         </div>
       </div>
 
-      <!-- 검색 / 필터 / CSV 다운로드 -->
+      <!-- 검색 / 필터 / DB 추가·삭제 / CSV 다운로드 -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
-        <div class="flex items-center justify-between gap-2">
-          <h3 class="text-sm font-bold text-slate-700">전체 이력</h3>
-          <button onclick="downloadCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            CSV 다운로드
-          </button>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <h3 class="text-sm font-bold text-slate-700">전체 이력 (DB 관리)</h3>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openManualAddModal()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">
+              + 이력 추가
+            </button>
+            <button onclick="downloadCSV()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
+              CSV
+            </button>
+            <button onclick="deleteAllCalls()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition">
+              전체 삭제
+            </button>
+          </div>
         </div>
         <div class="flex gap-2">
           <input id="historySearch" oninput="renderStatsAndHistory()" type="text" placeholder="라인, 공정, 증상, 담당자 검색..." class="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -257,22 +265,106 @@
     </div>
   </div>
 
-  <!-- 라인 및 공정 관리 모달 -->
-  <div id="lineModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4">
+  <!-- 이력 수동 추가 모달 -->
+  <div id="manualAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-slate-800">이력 수동 추가 (DB 등록)</h3>
+        <button onclick="closeManualAddModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-3 flex-1 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">라인 *</label>
+            <select id="manualLine" onchange="onManualLineChange()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold"></select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">세부 공정 *</label>
+            <select id="manualProcess" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">호출 유형 *</label>
+            <select id="manualType" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold">
+              <option value="equipment">설비 고장</option>
+              <option value="material">자재 부족</option>
+              <option value="quality">품질 이상</option>
+              <option value="safety">안전 / 긴급</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">상태 *</label>
+            <select id="manualStatus" onchange="onManualStatusChange()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold">
+              <option value="completed">조치완료</option>
+              <option value="in_progress">조치중</option>
+              <option value="waiting">대기중</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">발생 일시 *</label>
+            <input id="manualCreatedAt" type="datetime-local" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2" />
+          </div>
+          <div id="manualCompletedWrapper">
+            <label class="block font-bold text-slate-600 mb-1">완료 일시</label>
+            <input id="manualCompletedAt" type="datetime-local" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">상세 증상 / 내용</label>
+          <input id="manualMemo" type="text" placeholder="예: 체결기 토크 이상으로 재조정" class="w-full rounded-xl border border-slate-300 px-3 py-2" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">호출자</label>
+            <input id="manualCaller" type="text" placeholder="예: 홍길동" class="w-full rounded-xl border border-slate-300 px-3 py-2" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">담당자</label>
+            <input id="manualResponder" type="text" placeholder="예: 김담당" class="w-full rounded-xl border border-slate-300 px-3 py-2" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">조치 내용</label>
+          <textarea id="manualActionNote" rows="2" placeholder="예: 컨트롤러 리셋 및 테스트 완료" class="w-full rounded-xl border border-slate-300 px-3 py-2 resize-none"></textarea>
+        </div>
+      </div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex gap-2">
+        <button onclick="closeManualAddModal()" class="flex-1 py-2.5 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs">취소</button>
+        <button onclick="submitManualCall()" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">DB에 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 설정 관리 모달 (라인/공정 & 증상 태그 탭) -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4">
     <div class="bg-white w-full max-w-md max-h-[85vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-        <h3 class="text-base font-extrabold text-slate-800">라인 및 세부 공정 관리</h3>
-        <button onclick="closeLineModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+        <h3 class="text-base font-extrabold text-slate-800">기준정보 관리 (DB 연동)</h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+      <div class="grid grid-cols-2 border-b border-slate-200 text-xs font-bold">
+        <button id="settingsTabLines" onclick="switchSettingsTab('lines')" class="py-2.5 text-blue-600 border-b-2 border-blue-600 bg-blue-50/40">라인 / 공정 관리</button>
+        <button id="settingsTabTags" onclick="switchSettingsTab('tags')" class="py-2.5 text-slate-500 border-b-2 border-transparent">증상 태그 관리</button>
       </div>
       <div class="p-5 overflow-y-auto space-y-4 flex-1">
-        <div class="flex gap-2">
-          <input id="newLineName" type="text" placeholder="새 라인 이름 (예: 사출 1라인)" class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <button onclick="addLine()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold shrink-0">추가</button>
+        <!-- 서브탭 1: 라인/공정 -->
+        <div id="settingsPanelLines" class="space-y-4">
+          <div class="flex gap-2">
+            <input id="newLineName" type="text" placeholder="새 라인 이름 (예: 사출 1라인)" class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button onclick="addLine()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold shrink-0">추가</button>
+          </div>
+          <div id="lineManagerList" class="space-y-3"></div>
         </div>
-        <div id="lineManagerList" class="space-y-3"></div>
+        <!-- 서브탭 2: 증상 태그 -->
+        <div id="settingsPanelTags" class="hidden space-y-3">
+          <div id="tagManagerList" class="space-y-3"></div>
+        </div>
       </div>
       <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500">
-        * Firebase 연동 시 변경 사항이 모든 기기에 실시간 반영됩니다.
+        * 변경 사항은 Firebase DB에 저장되어 모든 기기에 즉시 반영됩니다.
       </div>
     </div>
   </div>
@@ -325,58 +417,57 @@ service cloud.firestore {
     // [여기만 수정하세요] 본인의 Firebase 설정값을 아래에 붙여넣으세요.
     // 비워두면 오류 없이 '로컬 데모 모드(브라우저 저장)'로 자동 실행됩니다.
     // =========================================================================
- const firebaseConfig = {
-  apiKey: "AIzaSyAwBt0J7QqXLOtt1alnHcBkYfSOjsGB_vU",
-  authDomain: "m-andon.firebaseapp.com",
-  projectId: "m-andon",
-  storageBucket: "m-andon.firebasestorage.app",
-  messagingSenderId: "853618716889",
-  appId: "1:853618716889:web:c6647f5c31a70206874ec8"
-};
+    const firebaseConfig = {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
     // =========================================================================
 
     const CALL_TYPES = [
       {
         id: 'equipment',
         label: '설비 고장',
-        color: 'red',
         bg: 'bg-red-50 border-red-200 text-red-700',
         activeBg: 'bg-red-600 border-red-600 text-white shadow-md shadow-red-600/25',
         badge: 'bg-red-100 text-red-700',
-        bar: 'bg-red-500',
-        tags: ['센서 이상', '에어 누설', '설비 정지', '체결기 불량', '컨베이어 멈춤']
+        bar: 'bg-red-500'
       },
       {
         id: 'material',
         label: '자재 부족',
-        color: 'amber',
         bg: 'bg-amber-50 border-amber-200 text-amber-800',
         activeBg: 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/25',
         badge: 'bg-amber-100 text-amber-800',
-        bar: 'bg-amber-500',
-        tags: ['부품 결품', '자재 공급 요청', '이종 자재 혼입', '포장재 부족', '지게차 지원']
+        bar: 'bg-amber-500'
       },
       {
         id: 'quality',
         label: '품질 이상',
-        color: 'purple',
         bg: 'bg-purple-50 border-purple-200 text-purple-700',
         activeBg: 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-600/25',
         badge: 'bg-purple-100 text-purple-700',
-        bar: 'bg-purple-500',
-        tags: ['외관 불량', '치수 이탈', '조립 누락', '바코드 리딩 불가', '초물 검사 요청']
+        bar: 'bg-purple-500'
       },
       {
         id: 'safety',
         label: '안전 / 긴급',
-        color: 'rose',
         bg: 'bg-rose-50 border-rose-200 text-rose-800',
         activeBg: 'bg-rose-700 border-rose-700 text-white shadow-md shadow-rose-700/25',
         badge: 'bg-rose-100 text-rose-800',
-        bar: 'bg-rose-600',
-        tags: ['안전 사고/위험', '누유/바닥 미끄럼', '비상 정지', '화재/연기', '긴급 지원 요청']
+        bar: 'bg-rose-600'
       }
     ];
+
+    const DEFAULT_TAGS = {
+      equipment: ['센서 이상', '에어 누설', '설비 정지', '체결기 불량', '컨베이어 멈춤'],
+      material: ['부품 결품', '자재 공급 요청', '이종 자재 혼입', '포장재 부족', '지게차 지원'],
+      quality: ['외관 불량', '치수 이탈', '조립 누락', '바코드 리딩 불가', '초물 검사 요청'],
+      safety: ['안전 사고/위험', '누유/바닥 미끄럼', '비상 정지', '화재/연기', '긴급 지원 요청']
+    };
 
     const DEFAULT_LINES = [
       { name: 'FEM 라인', processes: ['1공정 (투입)', '2공정 (조립)', '3공정 (검사)', '4공정 (출하)'] },
@@ -389,6 +480,7 @@ service cloud.firestore {
     let db = null;
     let isFirebaseMode = false;
     let linesConfig = [];
+    let tagsConfig = JSON.parse(JSON.stringify(DEFAULT_TAGS));
     let calls = [];
     let selectedTypeId = 'equipment';
     let selectedTags = new Set();
@@ -397,12 +489,13 @@ service cloud.firestore {
     let soundEnabled = true;
     let currentTab = 'call';
     let actionTargetId = null;
-    let actionTargetMode = null; // 'accept' | 'complete'
+    let actionTargetMode = null;
     let knownWaitingIds = new Set();
     let initialLoadDone = false;
 
     const LOCAL_CALLS_KEY = 'mobile_andon_calls_v2';
     const LOCAL_LINES_KEY = 'mobile_andon_lines_v2';
+    const LOCAL_TAGS_KEY = 'mobile_andon_tags_v2';
 
     // 초기화
     function init() {
@@ -423,7 +516,6 @@ service cloud.firestore {
         }, 400);
       }
 
-      // 1초마다 경과 시간 업데이트
       setInterval(updateTimers, 1000);
     }
 
@@ -443,7 +535,6 @@ service cloud.firestore {
           console.error('Firebase 초기화 실패, 로컬 모드로 전환:', err);
         }
       }
-      // 로컬 데모 모드
       isFirebaseMode = false;
       updateDbBadge(false);
       loadLocalData();
@@ -482,7 +573,21 @@ service cloud.firestore {
         showToast('Firebase 권한 오류: 보안 규칙을 확인하세요.');
       });
 
-      db.collection('andon_calls').orderBy('createdAt', 'desc').limit(200).onSnapshot((snapshot) => {
+      db.collection('andon_config').doc('tags').onSnapshot((doc) => {
+        if (doc.exists && doc.data().byType) {
+          tagsConfig = { ...JSON.parse(JSON.stringify(DEFAULT_TAGS)), ...doc.data().byType };
+        } else {
+          tagsConfig = JSON.parse(JSON.stringify(DEFAULT_TAGS));
+          db.collection('andon_config').doc('tags').set({ byType: tagsConfig }).catch(console.error);
+        }
+        renderCallTypes();
+        renderSymptomTags();
+        renderTagManager();
+      }, (err) => {
+        console.error('태그 설정 구독 오류:', err);
+      });
+
+      db.collection('andon_calls').orderBy('createdAt', 'desc').limit(300).onSnapshot((snapshot) => {
         const nextCalls = [];
         snapshot.forEach((doc) => {
           const d = doc.data();
@@ -529,6 +634,12 @@ service cloud.firestore {
         linesConfig = JSON.parse(JSON.stringify(DEFAULT_LINES));
       }
       try {
+        const savedTags = JSON.parse(localStorage.getItem(LOCAL_TAGS_KEY));
+        tagsConfig = savedTags ? { ...JSON.parse(JSON.stringify(DEFAULT_TAGS)), ...savedTags } : JSON.parse(JSON.stringify(DEFAULT_TAGS));
+      } catch {
+        tagsConfig = JSON.parse(JSON.stringify(DEFAULT_TAGS));
+      }
+      try {
         const savedCalls = JSON.parse(localStorage.getItem(LOCAL_CALLS_KEY));
         calls = Array.isArray(savedCalls) ? savedCalls : [];
       } catch {
@@ -556,6 +667,20 @@ service cloud.firestore {
       }
     }
 
+    function saveTagsConfig() {
+      if (isFirebaseMode) {
+        db.collection('andon_config').doc('tags').set({ byType: tagsConfig }).catch((err) => {
+          console.error(err);
+          showToast('태그 저장 실패 (Firebase 규칙 확인)');
+        });
+      } else {
+        localStorage.setItem(LOCAL_TAGS_KEY, JSON.stringify(tagsConfig));
+        renderCallTypes();
+        renderSymptomTags();
+        renderTagManager();
+      }
+    }
+
     // Web Audio API 알림음
     function playBeep(mode = 'confirm') {
       if (!soundEnabled) return;
@@ -576,7 +701,6 @@ service cloud.firestore {
           osc.start(now);
           osc.stop(now + 0.26);
         } else {
-          // 긴급 2회 비프
           [0, 0.22].forEach((offset) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -619,10 +743,13 @@ service cloud.firestore {
     // 전체 렌더링
     function renderAll() {
       renderLineSelectors();
+      renderCallTypes();
+      renderSymptomTags();
       renderBoardFilters();
       renderBoard();
       renderStatsAndHistory();
       renderLineManager();
+      renderTagManager();
       updateNavBadge();
     }
 
@@ -660,10 +787,11 @@ service cloud.firestore {
       const grid = document.getElementById('callTypeGrid');
       grid.innerHTML = CALL_TYPES.map((t) => {
         const isSelected = t.id === selectedTypeId;
+        const sampleTag = (tagsConfig[t.id] && tagsConfig[t.id][0]) ? `${tagsConfig[t.id][0]} 등` : '증상 선택';
         return `
           <button type="button" onclick="selectCallType('${t.id}')" class="p-3.5 rounded-xl border-2 text-left transition active:scale-[0.98] ${isSelected ? t.activeBg : t.bg}">
             <div class="text-sm font-extrabold">${t.label}</div>
-            <div class="text-[11px] mt-0.5 ${isSelected ? 'text-white/85' : 'opacity-75'}">${t.tags[0]} 등</div>
+            <div class="text-[11px] mt-0.5 ${isSelected ? 'text-white/85' : 'opacity-75'}">${escapeHtml(sampleTag)}</div>
           </button>
         `;
       }).join('');
@@ -677,9 +805,13 @@ service cloud.firestore {
     }
 
     function renderSymptomTags() {
-      const typeObj = CALL_TYPES.find(t => t.id === selectedTypeId) || CALL_TYPES[0];
+      const tags = tagsConfig[selectedTypeId] || [];
       const container = document.getElementById('symptomTags');
-      container.innerHTML = typeObj.tags.map((tag) => {
+      if (tags.length === 0) {
+        container.innerHTML = '<span class="text-xs text-slate-400">등록된 태그가 없습니다. 우측 상단 [+ 태그 편집]에서 추가하세요.</span>';
+        return;
+      }
+      container.innerHTML = tags.map((tag) => {
         const active = selectedTags.has(tag);
         return `
           <button type="button" onclick="toggleSymptomTag('${escapeHtml(tag)}')" class="px-3 py-1.5 rounded-full text-xs font-bold border transition ${active ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
@@ -861,13 +993,13 @@ service cloud.firestore {
                   ? `<button onclick="openActionModal('${c.id}', 'accept')" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition">접수 (조치 시작)</button>`
                   : `<button onclick="openActionModal('${c.id}', 'complete')" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition">조치 완료 처리</button>`
                 }
+                <button onclick="deleteCall('${c.id}')" title="이 호출 삭제" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 text-xs font-bold transition">삭제</button>
               </div>
             </div>
           `;
         }).join('');
       }
 
-      // 최근 조치완료 내역
       const recentBox = document.getElementById('recentCompletedList');
       if (completed.length === 0) {
         recentBox.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">완료된 내역이 없습니다.</div>';
@@ -901,6 +1033,134 @@ service cloud.firestore {
         const start = Number(el.getAttribute('data-timer-start'));
         if (start) el.textContent = formatElapsed(now - start);
       });
+    }
+
+    // DB 개별 삭제 / 전체 삭제
+    function deleteCall(id) {
+      if (!confirm('이 호출 기록을 DB에서 영구 삭제하시겠습니까?')) return;
+      if (isFirebaseMode) {
+        db.collection('andon_calls').doc(id).delete().then(() => {
+          showToast('호출 기록이 삭제되었습니다.');
+        }).catch((err) => {
+          console.error(err);
+          showToast('삭제 실패 (Firebase 보안 규칙 확인)');
+        });
+      } else {
+        calls = calls.filter(c => c.id !== id);
+        saveLocalCalls();
+        renderAll();
+        showToast('호출 기록이 삭제되었습니다.');
+      }
+    }
+
+    async function deleteAllCalls() {
+      if (calls.length === 0) {
+        showToast('삭제할 이력이 없습니다.');
+        return;
+      }
+      if (!confirm(`저장된 전체 이력 ${calls.length}건을 모두 삭제(초기화)하시겠습니까?\n삭제 후에는 복구할 수 없습니다.`)) return;
+
+      if (isFirebaseMode) {
+        try {
+          const snapshot = await db.collection('andon_calls').get();
+          const batch = db.batch();
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+          showToast('전체 이력이 초기화되었습니다.');
+        } catch (err) {
+          console.error(err);
+          showToast('전체 삭제 실패 (Firebase 규칙 확인)');
+        }
+      } else {
+        calls = [];
+        saveLocalCalls();
+        renderAll();
+        showToast('전체 이력이 초기화되었습니다.');
+      }
+    }
+
+    // 이력 수동 추가 모달
+    function openManualAddModal() {
+      const lineSel = document.getElementById('manualLine');
+      lineSel.innerHTML = linesConfig.map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`).join('');
+      onManualLineChange();
+
+      const nowLocal = toDatetimeLocalValue(Date.now());
+      document.getElementById('manualCreatedAt').value = nowLocal;
+      document.getElementById('manualCompletedAt').value = nowLocal;
+      document.getElementById('manualStatus').value = 'completed';
+      document.getElementById('manualMemo').value = '';
+      document.getElementById('manualCaller').value = '';
+      document.getElementById('manualResponder').value = '';
+      document.getElementById('manualActionNote').value = '';
+      onManualStatusChange();
+
+      document.getElementById('manualAddModal').classList.remove('hidden');
+    }
+
+    function closeManualAddModal() {
+      document.getElementById('manualAddModal').classList.add('hidden');
+    }
+
+    function onManualLineChange() {
+      const lineName = document.getElementById('manualLine').value;
+      const procSel = document.getElementById('manualProcess');
+      const found = linesConfig.find(l => l.name === lineName);
+      const procs = (found && found.processes && found.processes.length > 0) ? found.processes : ['전체 공정'];
+      procSel.innerHTML = procs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+    }
+
+    function onManualStatusChange() {
+      const st = document.getElementById('manualStatus').value;
+      document.getElementById('manualCompletedWrapper').classList.toggle('hidden', st !== 'completed');
+    }
+
+    function submitManualCall() {
+      const line = document.getElementById('manualLine').value;
+      const process = document.getElementById('manualProcess').value;
+      const typeId = document.getElementById('manualType').value;
+      const typeObj = CALL_TYPES.find(t => t.id === typeId) || CALL_TYPES[0];
+      const status = document.getElementById('manualStatus').value;
+      const createdStr = document.getElementById('manualCreatedAt').value;
+      const completedStr = document.getElementById('manualCompletedAt').value;
+
+      const createdAt = createdStr ? new Date(createdStr).getTime() : Date.now();
+      const completedAt = (status === 'completed') ? (completedStr ? new Date(completedStr).getTime() : createdAt) : null;
+      const acceptedAt = (status === 'in_progress' || status === 'completed') ? createdAt : null;
+
+      const newCall = {
+        line,
+        process,
+        typeId: typeObj.id,
+        typeLabel: typeObj.label,
+        symptoms: [],
+        memo: document.getElementById('manualMemo').value.trim(),
+        caller: document.getElementById('manualCaller').value.trim() || '관리자 수동등록',
+        status,
+        responder: document.getElementById('manualResponder').value.trim(),
+        actionNote: document.getElementById('manualActionNote').value.trim(),
+        createdAt,
+        acceptedAt,
+        completedAt
+      };
+
+      if (isFirebaseMode) {
+        db.collection('andon_calls').add(newCall).then(() => {
+          closeManualAddModal();
+          showToast('이력이 DB에 수동 등록되었습니다.');
+        }).catch((err) => {
+          console.error(err);
+          showToast('등록 실패 (Firebase 규칙 확인)');
+        });
+      } else {
+        newCall.id = 'local_' + Date.now();
+        calls.unshift(newCall);
+        calls.sort((a, b) => b.createdAt - a.createdAt);
+        saveLocalCalls();
+        renderAll();
+        closeManualAddModal();
+        showToast('이력이 수동 등록되었습니다.');
+      }
     }
 
     // 조치 접수 / 완료 모달
@@ -983,7 +1243,6 @@ service cloud.firestore {
         document.getElementById('kpiAvgTime').textContent = '-';
       }
 
-      // 유형별 비중
       const total = calls.length || 1;
       const typeStatsBox = document.getElementById('statsByType');
       typeStatsBox.innerHTML = CALL_TYPES.map((t) => {
@@ -1002,7 +1261,6 @@ service cloud.firestore {
         `;
       }).join('');
 
-      // 라인별 건수
       const lineMap = {};
       calls.forEach(c => { lineMap[c.line] = (lineMap[c.line] || 0) + 1; });
       const lineEntries = Object.entries(lineMap).sort((a, b) => b[1] - a[1]);
@@ -1027,7 +1285,6 @@ service cloud.firestore {
         }).join('');
       }
 
-      // 이력 검색 및 리스트
       const keyword = (document.getElementById('historySearch').value || '').trim().toLowerCase();
       const statusFilter = document.getElementById('historyStatusFilter').value;
 
@@ -1055,7 +1312,10 @@ service cloud.firestore {
             <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 space-y-1 text-xs">
               <div class="flex items-center justify-between gap-2">
                 <div class="font-bold text-slate-800">${escapeHtml(c.line)} · ${escapeHtml(c.process)}</div>
-                ${statusLabel}
+                <div class="flex items-center gap-1.5">
+                  ${statusLabel}
+                  <button onclick="deleteCall('${c.id}')" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-red-500 hover:bg-red-50">삭제</button>
+                </div>
               </div>
               <div class="text-slate-600 font-semibold">${escapeHtml(c.typeLabel)} ${(c.symptoms || []).map(s => '#' + escapeHtml(s)).join(' ')}</div>
               ${c.memo ? `<div class="text-slate-600">내용: ${escapeHtml(c.memo)}</div>` : ''}
@@ -1070,7 +1330,7 @@ service cloud.firestore {
       }
     }
 
-    // CSV 다운로드 (한글 깨짐 방지 UTF-8 BOM)
+    // CSV 다운로드
     function downloadCSV() {
       if (calls.length === 0) {
         showToast('다운로드할 이력이 없습니다.');
@@ -1109,14 +1369,28 @@ service cloud.firestore {
       showToast('CSV 파일이 다운로드되었습니다.');
     }
 
-    // 라인 및 공정 관리 모달
-    function openLineModal() {
+    // 설정 모달 (라인/공정 & 증상 태그)
+    function openSettingsModal(tab = 'lines') {
       renderLineManager();
-      document.getElementById('lineModal').classList.remove('hidden');
+      renderTagManager();
+      switchSettingsTab(tab);
+      document.getElementById('settingsModal').classList.remove('hidden');
     }
 
-    function closeLineModal() {
-      document.getElementById('lineModal').classList.add('hidden');
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function switchSettingsTab(tab) {
+      const isLines = tab === 'lines';
+      document.getElementById('settingsPanelLines').classList.toggle('hidden', !isLines);
+      document.getElementById('settingsPanelTags').classList.toggle('hidden', isLines);
+      document.getElementById('settingsTabLines').className = isLines
+        ? 'py-2.5 text-blue-600 border-b-2 border-blue-600 bg-blue-50/40'
+        : 'py-2.5 text-slate-500 border-b-2 border-transparent';
+      document.getElementById('settingsTabTags').className = !isLines
+        ? 'py-2.5 text-blue-600 border-b-2 border-blue-600 bg-blue-50/40'
+        : 'py-2.5 text-slate-500 border-b-2 border-transparent';
     }
 
     function renderLineManager() {
@@ -1191,6 +1465,55 @@ service cloud.firestore {
       saveLinesConfig();
     }
 
+    // 증상 태그 관리
+    function renderTagManager() {
+      const box = document.getElementById('tagManagerList');
+      box.innerHTML = CALL_TYPES.map((t) => {
+        const list = tagsConfig[t.id] || [];
+        return `
+          <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded-md text-xs font-extrabold ${t.badge}">${t.label}</span>
+              <span class="text-[11px] text-slate-400">${list.length}개</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              ${list.map((tag, tIdx) => `
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700">
+                  #${escapeHtml(tag)}
+                  <button onclick="deleteTag('${t.id}', ${tIdx})" class="text-slate-400 hover:text-red-500 ml-0.5">×</button>
+                </span>
+              `).join('')}
+            </div>
+            <div class="flex gap-1.5">
+              <input id="newTag_${t.id}" type="text" placeholder="새 증상 태그 입력" class="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <button onclick="addTag('${t.id}')" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold shrink-0">태그 추가</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addTag(typeId) {
+      const input = document.getElementById(`newTag_${typeId}`);
+      const tag = input.value.trim();
+      if (!tag) return;
+      if (!tagsConfig[typeId]) tagsConfig[typeId] = [];
+      if (tagsConfig[typeId].includes(tag)) {
+        showToast('이미 존재하는 태그입니다.');
+        return;
+      }
+      tagsConfig[typeId].push(tag);
+      input.value = '';
+      saveTagsConfig();
+      showToast(`'#${tag}' 태그가 추가되었습니다.`);
+    }
+
+    function deleteTag(typeId, tagIdx) {
+      if (!tagsConfig[typeId]) return;
+      tagsConfig[typeId].splice(tagIdx, 1);
+      saveTagsConfig();
+    }
+
     // Firebase 가이드 모달
     function openFirebaseGuide() {
       document.getElementById('guideCurrentState').textContent = isFirebaseMode
@@ -1213,6 +1536,12 @@ service cloud.firestore {
     }
 
     // 유틸리티
+    function toDatetimeLocalValue(ts) {
+      const d = new Date(ts);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
     function formatElapsed(ms) {
       const totalSec = Math.max(0, Math.floor(ms / 1000));
       const h = Math.floor(totalSec / 3600);
