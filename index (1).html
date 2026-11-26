@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>스마트 모바일 안돈 (Mobile Andon)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+      background-color: #f1f5f9;
+      overscroll-behavior-y: none;
+    }
+    @keyframes pulseBorder {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); border-color: #ef4444; }
+      50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); border-color: #fca5a5; }
+    }
+    .waiting-pulse {
+      animation: pulseBorder 1.8s infinite;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col">
+
+  <!-- 상단 헤더 -->
+  <header class="sticky top-0 z-30 bg-slate-900 text-white shadow-md">
+    <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-red-500 flex items-center justify-center shrink-0 shadow-inner">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-base font-bold leading-tight truncate">스마트 모바일 안돈</h1>
+          <button id="dbStatusBadge" onclick="openFirebaseGuide()" class="mt-0.5 inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 hover:bg-amber-500/30 transition">
+            <span id="dbStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span id="dbStatusText">로컬 데모 모드</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="soundToggleBtn" onclick="toggleSound()" title="알림음 켜기/끄기" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <svg id="soundOnIcon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+          </svg>
+          <svg id="soundOffIcon" class="w-5 h-5 hidden text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+          </svg>
+        </button>
+        <button onclick="openSettingsModal('lines')" title="라인/공정/태그 관리" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="flex-1 max-w-lg w-full mx-auto px-4 pt-4 pb-24">
+
+    <!-- 탭 1: 안돈 호출 (작업자용) -->
+    <section id="tab-call" class="space-y-4">
+      <!-- 라인 및 공정 선택 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700">1. 발생 위치 선택</h2>
+          <button onclick="openSettingsModal('lines')" class="text-xs font-semibold text-blue-600 hover:underline">+ 라인/공정 편집</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">라인</label>
+            <select id="callLineSelect" onchange="onCallLineChange()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">세부 공정</label>
+            <select id="callProcessSelect" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 호출 유형 선택 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <h2 class="text-sm font-bold text-slate-700">2. 호출 유형 선택</h2>
+        <div id="callTypeGrid" class="grid grid-cols-2 gap-2.5"></div>
+      </div>
+
+      <!-- 증상 태그 및 상세 메모 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700">3. 증상 선택 및 상세 내용</h2>
+          <button onclick="openSettingsModal('tags')" class="text-xs font-semibold text-blue-600 hover:underline">+ 태그 편집</button>
+        </div>
+        <div id="symptomTags" class="flex flex-wrap gap-1.5"></div>
+        <textarea id="callMemo" rows="2" placeholder="추가 전달 사항을 입력하세요 (선택)" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+        <input id="callerName" type="text" placeholder="호출자 이름 (선택, 예: 홍길동)" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <!-- 호출 발신 버튼 -->
+      <button onclick="submitAndonCall()" class="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white font-extrabold text-lg shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+        안돈 호출 발신
+      </button>
+    </section>
+
+    <!-- 탭 2: 실시간 현황판 -->
+    <section id="tab-board" class="hidden space-y-4">
+      <!-- 필터 영역 -->
+      <div class="space-y-2">
+        <div id="boardLineFilters" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1"></div>
+        <div id="boardTypeFilters" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1"></div>
+      </div>
+
+      <!-- 진행중(대기/조치중) 카운트 요약 -->
+      <div class="grid grid-cols-2 gap-2.5">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center justify-between">
+          <span class="text-xs font-bold text-red-700">대기중</span>
+          <span id="boardWaitingCount" class="text-xl font-black text-red-600">0</span>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
+          <span class="text-xs font-bold text-blue-700">조치중</span>
+          <span id="boardProgressCount" class="text-xl font-black text-blue-600">0</span>
+        </div>
+      </div>
+
+      <!-- 활성 호출 목록 -->
+      <div id="activeCallsList" class="space-y-3"></div>
+
+      <!-- 최근 조치완료 (접이식) -->
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <button onclick="toggleRecentCompleted()" class="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-50 transition">
+          <span class="text-sm font-bold text-slate-700">최근 조치완료 내역 (<span id="recentCompletedCount">0</span>)</span>
+          <svg id="recentChevron" class="w-4 h-4 text-slate-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        <div id="recentCompletedList" class="hidden border-t border-slate-100 divide-y divide-slate-100"></div>
+      </div>
+    </section>
+
+    <!-- 탭 3: 이력 및 통계 -->
+    <section id="tab-stats" class="hidden space-y-4">
+      <!-- 오늘의 KPI -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-500">오늘 총 발생</div>
+          <div id="kpiTotalToday" class="text-2xl font-black text-slate-800 mt-1">0</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-500">미조치</div>
+          <div id="kpiOpenToday" class="text-2xl font-black text-red-600 mt-1">0</div>
+        </div>
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-500">평균 조치</div>
+          <div id="kpiAvgTime" class="text-xl font-black text-blue-600 mt-1">-</div>
+        </div>
+      </div>
+
+      <!-- 유형별 / 라인별 통계 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-4">
+        <div>
+          <h3 class="text-xs font-bold text-slate-600 mb-2">유형별 발생 비중 (전체)</h3>
+          <div id="statsByType" class="space-y-2"></div>
+        </div>
+        <div class="border-t border-slate-100 pt-3">
+          <h3 class="text-xs font-bold text-slate-600 mb-2">라인별 발생 건수 (전체)</h3>
+          <div id="statsByLine" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- 검색 / 필터 / DB 추가·삭제 / CSV 다운로드 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <h3 class="text-sm font-bold text-slate-700">전체 이력 (DB 관리)</h3>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openManualAddModal()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">
+              + 이력 추가
+            </button>
+            <button onclick="downloadCSV()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
+              CSV
+            </button>
+            <button onclick="deleteAllCalls()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition">
+              전체 삭제
+            </button>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <input id="historySearch" oninput="renderStatsAndHistory()" type="text" placeholder="라인, 공정, 증상, 담당자 검색..." class="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <select id="historyStatusFilter" onchange="renderStatsAndHistory()" class="rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="ALL">전체 상태</option>
+            <option value="waiting">대기중</option>
+            <option value="in_progress">조치중</option>
+            <option value="completed">조치완료</option>
+          </select>
+        </div>
+        <div id="historyList" class="space-y-2.5 pt-1"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 하단 3단 탭 네비게이션 -->
+  <nav class="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] safe-bottom">
+    <div class="max-w-lg mx-auto grid grid-cols-3">
+      <button onclick="switchTab('call')" id="nav-call" class="py-2.5 flex flex-col items-center gap-0.5 text-red-600 font-bold">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+        <span class="text-[11px]">안돈 호출</span>
+      </button>
+
+      <button onclick="switchTab('board')" id="nav-board" class="relative py-2.5 flex flex-col items-center gap-0.5 text-slate-400 font-semibold">
+        <div class="relative">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+          </svg>
+          <span id="navBadgeCount" class="hidden absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">0</span>
+        </div>
+        <span class="text-[11px]">실시간 현황판</span>
+      </button>
+
+      <button onclick="switchTab('stats')" id="nav-stats" class="py-2.5 flex flex-col items-center gap-0.5 text-slate-400 font-semibold">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+        </svg>
+        <span class="text-[11px]">이력/통계</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 조치 접수 / 완료 모달 -->
+  <div id="actionModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="actionModalTitle" class="text-base font-extrabold text-slate-800">호출 접수</h3>
+        <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+      <div id="actionModalInfo" class="text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-600"></div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">담당자 이름 *</label>
+          <input id="actionResponder" type="text" placeholder="예: 김담당" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div id="actionNoteWrapper" class="hidden">
+          <label class="block text-xs font-bold text-slate-600 mb-1">조치 내용</label>
+          <textarea id="actionNote" rows="3" placeholder="예: 센서 리셋 후 정상 가동 확인" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeActionModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm">취소</button>
+        <button id="actionConfirmBtn" onclick="confirmActionModal()" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이력 수동 추가 모달 -->
+  <div id="manualAddModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-slate-800">이력 수동 추가 (DB 등록)</h3>
+        <button onclick="closeManualAddModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-3 flex-1 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">라인 *</label>
+            <select id="manualLine" onchange="onManualLineChange()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold"></select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">세부 공정 *</label>
+            <select id="manualProcess" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">호출 유형 *</label>
+            <select id="manualType" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold">
+              <option value="equipment">설비 고장</option>
+              <option value="material">자재 부족</option>
+              <option value="quality">품질 이상</option>
+              <option value="safety">안전 / 긴급</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">상태 *</label>
+            <select id="manualStatus" onchange="onManualStatusChange()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 font-bold">
+              <option value="completed">조치완료</option>
+              <option value="in_progress">조치중</option>
+              <option value="waiting">대기중</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">발생 일시 *</label>
+            <input id="manualCreatedAt" type="datetime-local" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2" />
+          </div>
+          <div id="manualCompletedWrapper">
+            <label class="block font-bold text-slate-600 mb-1">완료 일시</label>
+            <input id="manualCompletedAt" type="datetime-local" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">상세 증상 / 내용</label>
+          <input id="manualMemo" type="text" placeholder="예: 체결기 토크 이상으로 재조정" class="w-full rounded-xl border border-slate-300 px-3 py-2" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">호출자</label>
+            <input id="manualCaller" type="text" placeholder="예: 홍길동" class="w-full rounded-xl border border-slate-300 px-3 py-2" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">담당자</label>
+            <input id="manualResponder" type="text" placeholder="예: 김담당" class="w-full rounded-xl border border-slate-300 px-3 py-2" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">조치 내용</label>
+          <textarea id="manualActionNote" rows="2" placeholder="예: 컨트롤러 리셋 및 테스트 완료" class="w-full rounded-xl border border-slate-300 px-3 py-2 resize-none"></textarea>
+        </div>
+      </div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex gap-2">
+        <button onclick="closeManualAddModal()" class="flex-1 py-2.5 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs">취소</button>
+        <button onclick="submitManualCall()" class="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs">DB에 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 설정 관리 모달 (라인/공정 & 증상 태그 탭) -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md max-h-[85vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-slate-800">기준정보 관리 (DB 연동)</h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+      <div class="grid grid-cols-2 border-b border-slate-200 text-xs font-bold">
+        <button id="settingsTabLines" onclick="switchSettingsTab('lines')" class="py-2.5 text-blue-600 border-b-2 border-blue-600 bg-blue-50/40">라인 / 공정 관리</button>
+        <button id="settingsTabTags" onclick="switchSettingsTab('tags')" class="py-2.5 text-slate-500 border-b-2 border-transparent">증상 태그 관리</button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4 flex-1">
+        <!-- 서브탭 1: 라인/공정 -->
+        <div id="settingsPanelLines" class="space-y-4">
+          <div class="flex gap-2">
+            <input id="newLineName" type="text" placeholder="새 라인 이름 (예: 사출 1라인)" class="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button onclick="addLine()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold shrink-0">추가</button>
+          </div>
+          <div id="lineManagerList" class="space-y-3"></div>
+        </div>
+        <!-- 서브탭 2: 증상 태그 -->
+        <div id="settingsPanelTags" class="hidden space-y-3">
+          <div id="tagManagerList" class="space-y-3"></div>
+        </div>
+      </div>
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500">
+        * 변경 사항은 Firebase DB에 저장되어 모든 기기에 즉시 반영됩니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase 연동 가이드 모달 -->
+  <div id="firebaseGuideModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md max-h-[85vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-slate-800">Firebase 실시간 연동 가이드</h3>
+        <button onclick="closeFirebaseGuide()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-3 text-xs text-slate-700 leading-relaxed">
+        <p id="guideCurrentState" class="p-3 rounded-xl bg-slate-100 font-semibold"></p>
+        <ol class="list-decimal pl-4 space-y-1.5">
+          <li><strong>Firebase 콘솔</strong>에서 프로젝트를 만들고 <strong>Firestore Database</strong>를 생성합니다.</li>
+          <li>프로젝트 설정에서 <strong>웹 앱(&lt;/&gt;)</strong>을 추가하고 <code>firebaseConfig</code> 값을 복사합니다.</li>
+          <li>이 <code>index.html</code> 파일을 메모장으로 열어 코드 하단의 <strong>[여기만 수정하세요]</strong> 영역에 값을 붙여넣고 저장합니다.</li>
+          <li>Firestore <strong>규칙(Rules)</strong> 탭에 아래 규칙을 붙여넣고 게시합니다.</li>
+        </ol>
+        <div class="relative">
+          <pre id="firestoreRulesCode" class="bg-slate-900 text-emerald-300 p-3 rounded-xl text-[11px] overflow-x-auto">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /andon_calls/{docId} {
+      allow read, write: if true;
+    }
+    match /andon_config/{docId} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+          <button onclick="copyFirestoreRules()" class="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-[11px] font-bold">규칙 복사</button>
+        </div>
+      </div>
+      <div class="px-5 py-3 border-t border-slate-100 flex justify-end">
+        <button onclick="closeFirebaseGuide()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 알림 -->
+  <div id="toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg"></div>
+
+  <!-- Firebase SDK (Compat CDN - 단일 HTML 파일 즉시 실행용) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    // =========================================================================
+    // [여기만 수정하세요] 본인의 Firebase 설정값을 아래에 붙여넣으세요.
+    // 비워두면 오류 없이 '로컬 데모 모드(브라우저 저장)'로 자동 실행됩니다.
+    // =========================================================================
+    const firebaseConfig = {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
+    // =========================================================================
+
+    const CALL_TYPES = [
+      {
+        id: 'equipment',
+        label: '설비 고장',
+        bg: 'bg-red-50 border-red-200 text-red-700',
+        activeBg: 'bg-red-600 border-red-600 text-white shadow-md shadow-red-600/25',
+        badge: 'bg-red-100 text-red-700',
+        bar: 'bg-red-500'
+      },
+      {
+        id: 'material',
+        label: '자재 부족',
+        bg: 'bg-amber-50 border-amber-200 text-amber-800',
+        activeBg: 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/25',
+        badge: 'bg-amber-100 text-amber-800',
+        bar: 'bg-amber-500'
+      },
+      {
+        id: 'quality',
+        label: '품질 이상',
+        bg: 'bg-purple-50 border-purple-200 text-purple-700',
+        activeBg: 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-600/25',
+        badge: 'bg-purple-100 text-purple-700',
+        bar: 'bg-purple-500'
+      },
+      {
+        id: 'safety',
+        label: '안전 / 긴급',
+        bg: 'bg-rose-50 border-rose-200 text-rose-800',
+        activeBg: 'bg-rose-700 border-rose-700 text-white shadow-md shadow-rose-700/25',
+        badge: 'bg-rose-100 text-rose-800',
+        bar: 'bg-rose-600'
+      }
+    ];
+
+    const DEFAULT_TAGS = {
+      equipment: ['센서 이상', '에어 누설', '설비 정지', '체결기 불량', '컨베이어 멈춤'],
+      material: ['부품 결품', '자재 공급 요청', '이종 자재 혼입', '포장재 부족', '지게차 지원'],
+      quality: ['외관 불량', '치수 이탈', '조립 누락', '바코드 리딩 불가', '초물 검사 요청'],
+      safety: ['안전 사고/위험', '누유/바닥 미끄럼', '비상 정지', '화재/연기', '긴급 지원 요청']
+    };
+
+    const DEFAULT_LINES = [
+      { name: 'FEM 라인', processes: ['1공정 (투입)', '2공정 (조립)', '3공정 (검사)', '4공정 (출하)'] },
+      { name: 'PEM 라인', processes: ['1공정 (투입)', '2공정 (조립)', '3공정 (검사)'] },
+      { name: 'AAF 라인', processes: ['1공정 (조립)', '2공정 (기능검사)', '3공정 (포장)'] },
+      { name: '캐리어 라인', processes: ['사출 공정', '후가공', '최종 검사'] }
+    ];
+
+    // 상태 변수
+    let db = null;
+    let isFirebaseMode = false;
+    let linesConfig = [];
+    let tagsConfig = JSON.parse(JSON.stringify(DEFAULT_TAGS));
+    let calls = [];
+    let selectedTypeId = 'equipment';
+    let selectedTags = new Set();
+    let boardLineFilter = 'ALL';
+    let boardTypeFilter = 'ALL';
+    let soundEnabled = true;
+    let currentTab = 'call';
+    let actionTargetId = null;
+    let actionTargetMode = null;
+    let knownWaitingIds = new Set();
+    let initialLoadDone = false;
+
+    const LOCAL_CALLS_KEY = 'mobile_andon_calls_v2';
+    const LOCAL_LINES_KEY = 'mobile_andon_lines_v2';
+    const LOCAL_TAGS_KEY = 'mobile_andon_tags_v2';
+
+    // 초기화
+    function init() {
+      initFirebaseOrLocal();
+      renderCallTypes();
+      renderSymptomTags();
+
+      // URL 파라미터(?line=FEM 라인) 자동 선택 지원
+      const params = new URLSearchParams(window.location.search);
+      const urlLine = params.get('line');
+      if (urlLine) {
+        setTimeout(() => {
+          const sel = document.getElementById('callLineSelect');
+          if ([...sel.options].some(o => o.value === urlLine)) {
+            sel.value = urlLine;
+            onCallLineChange();
+          }
+        }, 400);
+      }
+
+      setInterval(updateTimers, 1000);
+    }
+
+    function initFirebaseOrLocal() {
+      const hasConfig = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId;
+      if (hasConfig && typeof firebase !== 'undefined') {
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          db = firebase.firestore();
+          isFirebaseMode = true;
+          updateDbBadge(true);
+          subscribeFirebase();
+          return;
+        } catch (err) {
+          console.error('Firebase 초기화 실패, 로컬 모드로 전환:', err);
+        }
+      }
+      isFirebaseMode = false;
+      updateDbBadge(false);
+      loadLocalData();
+      renderAll();
+    }
+
+    function updateDbBadge(connected) {
+      const badge = document.getElementById('dbStatusBadge');
+      const dot = document.getElementById('dbStatusDot');
+      const text = document.getElementById('dbStatusText');
+      if (connected) {
+        badge.className = 'mt-0.5 inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 hover:bg-emerald-500/30 transition';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse';
+        text.textContent = '실시간 DB 연동';
+      } else {
+        badge.className = 'mt-0.5 inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 hover:bg-amber-500/30 transition';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+        text.textContent = '로컬 데모 모드';
+      }
+    }
+
+    // Firebase 실시간 구독
+    function subscribeFirebase() {
+      db.collection('andon_config').doc('lines').onSnapshot((doc) => {
+        if (doc.exists && Array.isArray(doc.data().items) && doc.data().items.length > 0) {
+          linesConfig = doc.data().items;
+        } else {
+          linesConfig = JSON.parse(JSON.stringify(DEFAULT_LINES));
+          db.collection('andon_config').doc('lines').set({ items: linesConfig }).catch(console.error);
+        }
+        renderLineSelectors();
+        renderLineManager();
+        renderBoardFilters();
+      }, (err) => {
+        console.error('라인 설정 구독 오류:', err);
+        showToast('Firebase 권한 오류: 보안 규칙을 확인하세요.');
+      });
+
+      db.collection('andon_config').doc('tags').onSnapshot((doc) => {
+        if (doc.exists && doc.data().byType) {
+          tagsConfig = { ...JSON.parse(JSON.stringify(DEFAULT_TAGS)), ...doc.data().byType };
+        } else {
+          tagsConfig = JSON.parse(JSON.stringify(DEFAULT_TAGS));
+          db.collection('andon_config').doc('tags').set({ byType: tagsConfig }).catch(console.error);
+        }
+        renderCallTypes();
+        renderSymptomTags();
+        renderTagManager();
+      }, (err) => {
+        console.error('태그 설정 구독 오류:', err);
+      });
+
+      db.collection('andon_calls').orderBy('createdAt', 'desc').limit(300).onSnapshot((snapshot) => {
+        const nextCalls = [];
+        snapshot.forEach((doc) => {
+          const d = doc.data();
+          nextCalls.push({
+            id: doc.id,
+            ...d,
+            createdAt: d.createdAt?.toMillis ? d.createdAt.toMillis() : (d.createdAt || Date.now()),
+            acceptedAt: d.acceptedAt?.toMillis ? d.acceptedAt.toMillis() : (d.acceptedAt || null),
+            completedAt: d.completedAt?.toMillis ? d.completedAt.toMillis() : (d.completedAt || null)
+          });
+        });
+
+        checkNewWaitingAlerts(nextCalls);
+        calls = nextCalls;
+        renderAll();
+      }, (err) => {
+        console.error('호출 목록 구독 오류:', err);
+      });
+    }
+
+    function checkNewWaitingAlerts(nextCalls) {
+      const nextWaitingIds = new Set(nextCalls.filter(c => c.status === 'waiting').map(c => c.id));
+      if (initialLoadDone) {
+        let hasNew = false;
+        nextWaitingIds.forEach(id => {
+          if (!knownWaitingIds.has(id)) hasNew = true;
+        });
+        if (hasNew) {
+          playBeep('alert');
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          showToast('🚨 신규 안돈 호출이 접수되었습니다!');
+        }
+      }
+      knownWaitingIds = nextWaitingIds;
+      initialLoadDone = true;
+    }
+
+    // 로컬 모드 데이터 로드/저장
+    function loadLocalData() {
+      try {
+        const savedLines = JSON.parse(localStorage.getItem(LOCAL_LINES_KEY));
+        linesConfig = (Array.isArray(savedLines) && savedLines.length > 0) ? savedLines : JSON.parse(JSON.stringify(DEFAULT_LINES));
+      } catch {
+        linesConfig = JSON.parse(JSON.stringify(DEFAULT_LINES));
+      }
+      try {
+        const savedTags = JSON.parse(localStorage.getItem(LOCAL_TAGS_KEY));
+        tagsConfig = savedTags ? { ...JSON.parse(JSON.stringify(DEFAULT_TAGS)), ...savedTags } : JSON.parse(JSON.stringify(DEFAULT_TAGS));
+      } catch {
+        tagsConfig = JSON.parse(JSON.stringify(DEFAULT_TAGS));
+      }
+      try {
+        const savedCalls = JSON.parse(localStorage.getItem(LOCAL_CALLS_KEY));
+        calls = Array.isArray(savedCalls) ? savedCalls : [];
+      } catch {
+        calls = [];
+      }
+      knownWaitingIds = new Set(calls.filter(c => c.status === 'waiting').map(c => c.id));
+      initialLoadDone = true;
+    }
+
+    function saveLocalCalls() {
+      localStorage.setItem(LOCAL_CALLS_KEY, JSON.stringify(calls));
+    }
+
+    function saveLinesConfig() {
+      if (isFirebaseMode) {
+        db.collection('andon_config').doc('lines').set({ items: linesConfig }).catch((err) => {
+          console.error(err);
+          showToast('라인 저장 실패 (Firebase 규칙 확인)');
+        });
+      } else {
+        localStorage.setItem(LOCAL_LINES_KEY, JSON.stringify(linesConfig));
+        renderLineSelectors();
+        renderLineManager();
+        renderBoardFilters();
+      }
+    }
+
+    function saveTagsConfig() {
+      if (isFirebaseMode) {
+        db.collection('andon_config').doc('tags').set({ byType: tagsConfig }).catch((err) => {
+          console.error(err);
+          showToast('태그 저장 실패 (Firebase 규칙 확인)');
+        });
+      } else {
+        localStorage.setItem(LOCAL_TAGS_KEY, JSON.stringify(tagsConfig));
+        renderCallTypes();
+        renderSymptomTags();
+        renderTagManager();
+      }
+    }
+
+    // Web Audio API 알림음
+    function playBeep(mode = 'confirm') {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        if (mode === 'confirm') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.exponentialRampToValueAtTime(1320, now + 0.12);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.26);
+        } else {
+          [0, 0.22].forEach((offset) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(980, now + offset);
+            gain.gain.setValueAtTime(0.25, now + offset);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.18);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + offset);
+            osc.stop(now + offset + 0.19);
+          });
+        }
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundOnIcon').classList.toggle('hidden', !soundEnabled);
+      document.getElementById('soundOffIcon').classList.toggle('hidden', soundEnabled);
+      showToast(soundEnabled ? '알림음이 켜졌습니다.' : '알림음이 꺼졌습니다.');
+    }
+
+    // 탭 전환
+    function switchTab(tab) {
+      currentTab = tab;
+      ['call', 'board', 'stats'].forEach((t) => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (t === tab) {
+          navBtn.className = 'relative py-2.5 flex flex-col items-center gap-0.5 text-red-600 font-bold';
+        } else {
+          navBtn.className = 'relative py-2.5 flex flex-col items-center gap-0.5 text-slate-400 font-semibold';
+        }
+      });
+      if (tab === 'board') renderBoard();
+      if (tab === 'stats') renderStatsAndHistory();
+    }
+
+    // 전체 렌더링
+    function renderAll() {
+      renderLineSelectors();
+      renderCallTypes();
+      renderSymptomTags();
+      renderBoardFilters();
+      renderBoard();
+      renderStatsAndHistory();
+      renderLineManager();
+      renderTagManager();
+      updateNavBadge();
+    }
+
+    function updateNavBadge() {
+      const openCount = calls.filter(c => c.status === 'waiting' || c.status === 'in_progress').length;
+      const badge = document.getElementById('navBadgeCount');
+      if (openCount > 0) {
+        badge.textContent = openCount > 99 ? '99+' : openCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // 탭 1: 라인/공정 셀렉터
+    function renderLineSelectors() {
+      const lineSel = document.getElementById('callLineSelect');
+      const prevLine = lineSel.value;
+      lineSel.innerHTML = linesConfig.map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`).join('');
+      if (linesConfig.some(l => l.name === prevLine)) {
+        lineSel.value = prevLine;
+      }
+      onCallLineChange();
+    }
+
+    function onCallLineChange() {
+      const lineName = document.getElementById('callLineSelect').value;
+      const procSel = document.getElementById('callProcessSelect');
+      const found = linesConfig.find(l => l.name === lineName);
+      const procs = (found && found.processes && found.processes.length > 0) ? found.processes : ['전체 공정'];
+      procSel.innerHTML = procs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+    }
+
+    function renderCallTypes() {
+      const grid = document.getElementById('callTypeGrid');
+      grid.innerHTML = CALL_TYPES.map((t) => {
+        const isSelected = t.id === selectedTypeId;
+        const sampleTag = (tagsConfig[t.id] && tagsConfig[t.id][0]) ? `${tagsConfig[t.id][0]} 등` : '증상 선택';
+        return `
+          <button type="button" onclick="selectCallType('${t.id}')" class="p-3.5 rounded-xl border-2 text-left transition active:scale-[0.98] ${isSelected ? t.activeBg : t.bg}">
+            <div class="text-sm font-extrabold">${t.label}</div>
+            <div class="text-[11px] mt-0.5 ${isSelected ? 'text-white/85' : 'opacity-75'}">${escapeHtml(sampleTag)}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCallType(id) {
+      selectedTypeId = id;
+      selectedTags.clear();
+      renderCallTypes();
+      renderSymptomTags();
+    }
+
+    function renderSymptomTags() {
+      const tags = tagsConfig[selectedTypeId] || [];
+      const container = document.getElementById('symptomTags');
+      if (tags.length === 0) {
+        container.innerHTML = '<span class="text-xs text-slate-400">등록된 태그가 없습니다. 우측 상단 [+ 태그 편집]에서 추가하세요.</span>';
+        return;
+      }
+      container.innerHTML = tags.map((tag) => {
+        const active = selectedTags.has(tag);
+        return `
+          <button type="button" onclick="toggleSymptomTag('${escapeHtml(tag)}')" class="px-3 py-1.5 rounded-full text-xs font-bold border transition ${active ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
+            ${active ? '✓ ' : '+ '}${escapeHtml(tag)}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function toggleSymptomTag(tag) {
+      if (selectedTags.has(tag)) selectedTags.delete(tag);
+      else selectedTags.add(tag);
+      renderSymptomTags();
+    }
+
+    // 안돈 호출 발신
+    function submitAndonCall() {
+      const line = document.getElementById('callLineSelect').value;
+      const process = document.getElementById('callProcessSelect').value;
+      const memo = document.getElementById('callMemo').value.trim();
+      const caller = document.getElementById('callerName').value.trim() || '현장 작업자';
+      const typeObj = CALL_TYPES.find(t => t.id === selectedTypeId) || CALL_TYPES[0];
+
+      if (!line) {
+        showToast('라인을 먼저 선택해 주세요.');
+        return;
+      }
+
+      const symptoms = Array.from(selectedTags);
+      const newCall = {
+        line,
+        process,
+        typeId: typeObj.id,
+        typeLabel: typeObj.label,
+        symptoms,
+        memo,
+        caller,
+        status: 'waiting',
+        responder: '',
+        actionNote: '',
+        createdAt: Date.now(),
+        acceptedAt: null,
+        completedAt: null
+      };
+
+      playBeep('confirm');
+      if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+
+      if (isFirebaseMode) {
+        db.collection('andon_calls').add(newCall).then(() => {
+          resetCallForm();
+          showToast(`✅ [${line} / ${process}] 안돈 호출 발신 완료`);
+          switchTab('board');
+        }).catch((err) => {
+          console.error(err);
+          showToast('전송 실패: Firebase 연결/규칙을 확인하세요.');
+        });
+      } else {
+        newCall.id = 'local_' + Date.now();
+        calls.unshift(newCall);
+        saveLocalCalls();
+        resetCallForm();
+        renderAll();
+        showToast(`✅ [${line} / ${process}] 호출 발신 (로컬 모드)`);
+        switchTab('board');
+      }
+    }
+
+    function resetCallForm() {
+      selectedTags.clear();
+      document.getElementById('callMemo').value = '';
+      renderSymptomTags();
+    }
+
+    // 탭 2: 실시간 현황판
+    function renderBoardFilters() {
+      const lineBox = document.getElementById('boardLineFilters');
+      const lineNames = ['ALL', ...linesConfig.map(l => l.name)];
+      lineBox.innerHTML = lineNames.map((name) => {
+        const active = boardLineFilter === name;
+        return `
+          <button onclick="setBoardLineFilter('${escapeHtml(name)}')" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition ${active ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}">
+            ${name === 'ALL' ? '전체 라인' : escapeHtml(name)}
+          </button>
+        `;
+      }).join('');
+
+      const typeBox = document.getElementById('boardTypeFilters');
+      const types = [{ id: 'ALL', label: '전체 유형' }, ...CALL_TYPES];
+      typeBox.innerHTML = types.map((t) => {
+        const active = boardTypeFilter === t.id;
+        return `
+          <button onclick="setBoardTypeFilter('${t.id}')" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200'}">
+            ${t.label}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setBoardLineFilter(name) {
+      boardLineFilter = name;
+      renderBoardFilters();
+      renderBoard();
+    }
+
+    function setBoardTypeFilter(id) {
+      boardTypeFilter = id;
+      renderBoardFilters();
+      renderBoard();
+    }
+
+    function renderBoard() {
+      const filtered = calls.filter((c) => {
+        if (boardLineFilter !== 'ALL' && c.line !== boardLineFilter) return false;
+        if (boardTypeFilter !== 'ALL' && c.typeId !== boardTypeFilter) return false;
+        return true;
+      });
+
+      const waiting = filtered.filter(c => c.status === 'waiting').sort((a, b) => a.createdAt - b.createdAt);
+      const inProgress = filtered.filter(c => c.status === 'in_progress').sort((a, b) => a.createdAt - b.createdAt);
+      const completed = filtered.filter(c => c.status === 'completed').sort((a, b) => (b.completedAt || b.createdAt) - (a.completedAt || a.createdAt)).slice(0, 10);
+
+      document.getElementById('boardWaitingCount').textContent = waiting.length;
+      document.getElementById('boardProgressCount').textContent = inProgress.length;
+      document.getElementById('recentCompletedCount').textContent = completed.length;
+
+      const activeList = [...waiting, ...inProgress];
+      const container = document.getElementById('activeCallsList');
+
+      if (activeList.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-2">
+            <div class="text-3xl">✅</div>
+            <div class="text-sm font-bold text-slate-700">현재 미조치 호출이 없습니다</div>
+            <div class="text-xs text-slate-400">모든 라인이 정상 가동 중입니다.</div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = activeList.map((c) => {
+          const typeObj = CALL_TYPES.find(t => t.id === c.typeId) || CALL_TYPES[0];
+          const isWaiting = c.status === 'waiting';
+          const cardClass = isWaiting
+            ? 'bg-white rounded-2xl p-4 border-2 border-red-500 waiting-pulse shadow-sm space-y-3'
+            : 'bg-white rounded-2xl p-4 border-2 border-blue-500 shadow-sm space-y-3';
+          const statusBadge = isWaiting
+            ? '<span class="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">대기중</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[11px] font-extrabold">조치중</span>';
+
+          const symptomsHtml = (c.symptoms && c.symptoms.length > 0)
+            ? `<div class="flex flex-wrap gap-1">${c.symptoms.map(s => `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-semibold">#${escapeHtml(s)}</span>`).join('')}</div>`
+            : '';
+
+          return `
+            <div class="${cardClass}">
+              <div class="flex items-start justify-between gap-2">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    ${statusBadge}
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold ${typeObj.badge}">${escapeHtml(c.typeLabel)}</span>
+                  </div>
+                  <div class="text-base font-extrabold text-slate-900">${escapeHtml(c.line)} <span class="text-slate-400 font-normal">·</span> ${escapeHtml(c.process)}</div>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-[11px] text-slate-400 font-semibold">경과시간</div>
+                  <div class="text-base font-black font-mono ${isWaiting ? 'text-red-600' : 'text-blue-600'}" data-timer-start="${c.createdAt}">${formatElapsed(Date.now() - c.createdAt)}</div>
+                </div>
+              </div>
+
+              ${symptomsHtml}
+              ${c.memo ? `<p class="text-xs text-slate-700 bg-slate-50 rounded-xl p-2.5 border border-slate-100">${escapeHtml(c.memo)}</p>` : ''}
+
+              <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                <span>호출: ${escapeHtml(c.caller || '-')} (${formatTime(c.createdAt)})</span>
+                ${c.responder ? `<span class="font-bold text-blue-700">담당: ${escapeHtml(c.responder)}</span>` : ''}
+              </div>
+
+              <div class="flex gap-2 pt-1">
+                ${isWaiting
+                  ? `<button onclick="openActionModal('${c.id}', 'accept')" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition">접수 (조치 시작)</button>`
+                  : `<button onclick="openActionModal('${c.id}', 'complete')" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition">조치 완료 처리</button>`
+                }
+                <button onclick="deleteCall('${c.id}')" title="이 호출 삭제" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 text-xs font-bold transition">삭제</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const recentBox = document.getElementById('recentCompletedList');
+      if (completed.length === 0) {
+        recentBox.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">완료된 내역이 없습니다.</div>';
+      } else {
+        recentBox.innerHTML = completed.map((c) => {
+          const duration = c.completedAt ? formatDurationMin(c.completedAt - c.createdAt) : '-';
+          return `
+            <div class="px-4 py-3 text-xs space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-800">${escapeHtml(c.line)} · ${escapeHtml(c.process)} (${escapeHtml(c.typeLabel)})</span>
+                <span class="text-[11px] font-bold text-emerald-600">소요 ${duration}</span>
+              </div>
+              <div class="text-slate-500">담당: ${escapeHtml(c.responder || '-')} ${c.actionNote ? `| ${escapeHtml(c.actionNote)}` : ''}</div>
+              <div class="text-[10px] text-slate-400">${formatDateTime(c.createdAt)} → ${formatTime(c.completedAt)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function toggleRecentCompleted() {
+      const list = document.getElementById('recentCompletedList');
+      const chev = document.getElementById('recentChevron');
+      list.classList.toggle('hidden');
+      chev.classList.toggle('rotate-180');
+    }
+
+    function updateTimers() {
+      const now = Date.now();
+      document.querySelectorAll('[data-timer-start]').forEach((el) => {
+        const start = Number(el.getAttribute('data-timer-start'));
+        if (start) el.textContent = formatElapsed(now - start);
+      });
+    }
+
+    // DB 개별 삭제 / 전체 삭제
+    function deleteCall(id) {
+      if (!confirm('이 호출 기록을 DB에서 영구 삭제하시겠습니까?')) return;
+      if (isFirebaseMode) {
+        db.collection('andon_calls').doc(id).delete().then(() => {
+          showToast('호출 기록이 삭제되었습니다.');
+        }).catch((err) => {
+          console.error(err);
+          showToast('삭제 실패 (Firebase 보안 규칙 확인)');
+        });
+      } else {
+        calls = calls.filter(c => c.id !== id);
+        saveLocalCalls();
+        renderAll();
+        showToast('호출 기록이 삭제되었습니다.');
+      }
+    }
+
+    async function deleteAllCalls() {
+      if (calls.length === 0) {
+        showToast('삭제할 이력이 없습니다.');
+        return;
+      }
+      if (!confirm(`저장된 전체 이력 ${calls.length}건을 모두 삭제(초기화)하시겠습니까?\n삭제 후에는 복구할 수 없습니다.`)) return;
+
+      if (isFirebaseMode) {
+        try {
+          const snapshot = await db.collection('andon_calls').get();
+          const batch = db.batch();
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+          showToast('전체 이력이 초기화되었습니다.');
+        } catch (err) {
+          console.error(err);
+          showToast('전체 삭제 실패 (Firebase 규칙 확인)');
+        }
+      } else {
+        calls = [];
+        saveLocalCalls();
+        renderAll();
+        showToast('전체 이력이 초기화되었습니다.');
+      }
+    }
+
+    // 이력 수동 추가 모달
+    function openManualAddModal() {
+      const lineSel = document.getElementById('manualLine');
+      lineSel.innerHTML = linesConfig.map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`).join('');
+      onManualLineChange();
+
+      const nowLocal = toDatetimeLocalValue(Date.now());
+      document.getElementById('manualCreatedAt').value = nowLocal;
+      document.getElementById('manualCompletedAt').value = nowLocal;
+      document.getElementById('manualStatus').value = 'completed';
+      document.getElementById('manualMemo').value = '';
+      document.getElementById('manualCaller').value = '';
+      document.getElementById('manualResponder').value = '';
+      document.getElementById('manualActionNote').value = '';
+      onManualStatusChange();
+
+      document.getElementById('manualAddModal').classList.remove('hidden');
+    }
+
+    function closeManualAddModal() {
+      document.getElementById('manualAddModal').classList.add('hidden');
+    }
+
+    function onManualLineChange() {
+      const lineName = document.getElementById('manualLine').value;
+      const procSel = document.getElementById('manualProcess');
+      const found = linesConfig.find(l => l.name === lineName);
+      const procs = (found && found.processes && found.processes.length > 0) ? found.processes : ['전체 공정'];
+      procSel.innerHTML = procs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+    }
+
+    function onManualStatusChange() {
+      const st = document.getElementById('manualStatus').value;
+      document.getElementById('manualCompletedWrapper').classList.toggle('hidden', st !== 'completed');
+    }
+
+    function submitManualCall() {
+      const line = document.getElementById('manualLine').value;
+      const process = document.getElementById('manualProcess').value;
+      const typeId = document.getElementById('manualType').value;
+      const typeObj = CALL_TYPES.find(t => t.id === typeId) || CALL_TYPES[0];
+      const status = document.getElementById('manualStatus').value;
+      const createdStr = document.getElementById('manualCreatedAt').value;
+      const completedStr = document.getElementById('manualCompletedAt').value;
+
+      const createdAt = createdStr ? new Date(createdStr).getTime() : Date.now();
+      const completedAt = (status === 'completed') ? (completedStr ? new Date(completedStr).getTime() : createdAt) : null;
+      const acceptedAt = (status === 'in_progress' || status === 'completed') ? createdAt : null;
+
+      const newCall = {
+        line,
+        process,
+        typeId: typeObj.id,
+        typeLabel: typeObj.label,
+        symptoms: [],
+        memo: document.getElementById('manualMemo').value.trim(),
+        caller: document.getElementById('manualCaller').value.trim() || '관리자 수동등록',
+        status,
+        responder: document.getElementById('manualResponder').value.trim(),
+        actionNote: document.getElementById('manualActionNote').value.trim(),
+        createdAt,
+        acceptedAt,
+        completedAt
+      };
+
+      if (isFirebaseMode) {
+        db.collection('andon_calls').add(newCall).then(() => {
+          closeManualAddModal();
+          showToast('이력이 DB에 수동 등록되었습니다.');
+        }).catch((err) => {
+          console.error(err);
+          showToast('등록 실패 (Firebase 규칙 확인)');
+        });
+      } else {
+        newCall.id = 'local_' + Date.now();
+        calls.unshift(newCall);
+        calls.sort((a, b) => b.createdAt - a.createdAt);
+        saveLocalCalls();
+        renderAll();
+        closeManualAddModal();
+        showToast('이력이 수동 등록되었습니다.');
+      }
+    }
+
+    // 조치 접수 / 완료 모달
+    function openActionModal(id, mode) {
+      const target = calls.find(c => c.id === id);
+      if (!target) return;
+      actionTargetId = id;
+      actionTargetMode = mode;
+
+      document.getElementById('actionModalTitle').textContent = mode === 'accept' ? '호출 접수 (조치 시작)' : '조치 완료 처리';
+      document.getElementById('actionModalInfo').innerHTML = `
+        <div class="font-bold text-slate-800">${escapeHtml(target.line)} · ${escapeHtml(target.process)} (${escapeHtml(target.typeLabel)})</div>
+        <div class="mt-1">${(target.symptoms || []).map(s => '#' + escapeHtml(s)).join(' ')} ${escapeHtml(target.memo || '')}</div>
+      `;
+      document.getElementById('actionResponder').value = target.responder || '';
+      document.getElementById('actionNote').value = target.actionNote || '';
+      document.getElementById('actionNoteWrapper').classList.toggle('hidden', mode !== 'complete');
+
+      const confirmBtn = document.getElementById('actionConfirmBtn');
+      confirmBtn.className = mode === 'accept'
+        ? 'flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm'
+        : 'flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-sm';
+      confirmBtn.textContent = mode === 'accept' ? '접수 확인' : '완료 저장';
+
+      document.getElementById('actionModal').classList.remove('hidden');
+    }
+
+    function closeActionModal() {
+      document.getElementById('actionModal').classList.add('hidden');
+      actionTargetId = null;
+      actionTargetMode = null;
+    }
+
+    function confirmActionModal() {
+      const responder = document.getElementById('actionResponder').value.trim();
+      const actionNote = document.getElementById('actionNote').value.trim();
+      if (!responder) {
+        showToast('담당자 이름을 입력해 주세요.');
+        return;
+      }
+
+      const updateData = actionTargetMode === 'accept'
+        ? { status: 'in_progress', responder, acceptedAt: Date.now() }
+        : { status: 'completed', responder, actionNote, completedAt: Date.now() };
+
+      if (isFirebaseMode) {
+        db.collection('andon_calls').doc(actionTargetId).update(updateData).then(() => {
+          closeActionModal();
+          showToast(actionTargetMode === 'accept' ? '조치 접수가 완료되었습니다.' : '조치 완료 처리되었습니다.');
+        }).catch((err) => {
+          console.error(err);
+          showToast('업데이트 실패 (Firebase 규칙 확인)');
+        });
+      } else {
+        const idx = calls.findIndex(c => c.id === actionTargetId);
+        if (idx !== -1) {
+          calls[idx] = { ...calls[idx], ...updateData };
+          saveLocalCalls();
+          renderAll();
+        }
+        closeActionModal();
+        showToast(actionTargetMode === 'accept' ? '조치 접수가 완료되었습니다.' : '조치 완료 처리되었습니다.');
+      }
+    }
+
+    // 탭 3: 이력 및 통계
+    function renderStatsAndHistory() {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayCalls = calls.filter(c => new Date(c.createdAt).toISOString().slice(0, 10) === todayStr);
+      const openToday = todayCalls.filter(c => c.status !== 'completed');
+      const completedToday = todayCalls.filter(c => c.status === 'completed' && c.completedAt);
+
+      document.getElementById('kpiTotalToday').textContent = todayCalls.length;
+      document.getElementById('kpiOpenToday').textContent = openToday.length;
+
+      if (completedToday.length > 0) {
+        const avgMs = completedToday.reduce((sum, c) => sum + Math.max(0, c.completedAt - c.createdAt), 0) / completedToday.length;
+        document.getElementById('kpiAvgTime').textContent = formatDurationMin(avgMs);
+      } else {
+        document.getElementById('kpiAvgTime').textContent = '-';
+      }
+
+      const total = calls.length || 1;
+      const typeStatsBox = document.getElementById('statsByType');
+      typeStatsBox.innerHTML = CALL_TYPES.map((t) => {
+        const cnt = calls.filter(c => c.typeId === t.id).length;
+        const pct = calls.length ? Math.round((cnt / total) * 100) : 0;
+        return `
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="font-semibold text-slate-700">${t.label}</span>
+              <span class="font-bold text-slate-500">${cnt}건 (${pct}%)</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full ${t.bar} rounded-full transition-all" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const lineMap = {};
+      calls.forEach(c => { lineMap[c.line] = (lineMap[c.line] || 0) + 1; });
+      const lineEntries = Object.entries(lineMap).sort((a, b) => b[1] - a[1]);
+      const lineStatsBox = document.getElementById('statsByLine');
+      if (lineEntries.length === 0) {
+        lineStatsBox.innerHTML = '<div class="text-xs text-slate-400">집계된 이력이 없습니다.</div>';
+      } else {
+        const maxCnt = lineEntries[0][1] || 1;
+        lineStatsBox.innerHTML = lineEntries.map(([lineName, cnt]) => {
+          const pct = Math.round((cnt / maxCnt) * 100);
+          return `
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-semibold text-slate-700">${escapeHtml(lineName)}</span>
+                <span class="font-bold text-slate-500">${cnt}건</span>
+              </div>
+              <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-slate-700 rounded-full transition-all" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const keyword = (document.getElementById('historySearch').value || '').trim().toLowerCase();
+      const statusFilter = document.getElementById('historyStatusFilter').value;
+
+      const filteredHistory = calls.filter((c) => {
+        if (statusFilter !== 'ALL' && c.status !== statusFilter) return false;
+        if (keyword) {
+          const hay = `${c.line} ${c.process} ${c.typeLabel} ${(c.symptoms || []).join(' ')} ${c.memo} ${c.caller} ${c.responder} ${c.actionNote}`.toLowerCase();
+          if (!hay.includes(keyword)) return false;
+        }
+        return true;
+      });
+
+      const listBox = document.getElementById('historyList');
+      if (filteredHistory.length === 0) {
+        listBox.innerHTML = '<div class="py-6 text-center text-xs text-slate-400">조건에 맞는 이력이 없습니다.</div>';
+      } else {
+        listBox.innerHTML = filteredHistory.map((c) => {
+          const statusLabel = c.status === 'waiting'
+            ? '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">대기중</span>'
+            : c.status === 'in_progress'
+              ? '<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">조치중</span>'
+              : '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">조치완료</span>';
+          const dur = c.completedAt ? formatDurationMin(c.completedAt - c.createdAt) : '-';
+          return `
+            <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 space-y-1 text-xs">
+              <div class="flex items-center justify-between gap-2">
+                <div class="font-bold text-slate-800">${escapeHtml(c.line)} · ${escapeHtml(c.process)}</div>
+                <div class="flex items-center gap-1.5">
+                  ${statusLabel}
+                  <button onclick="deleteCall('${c.id}')" class="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-red-500 hover:bg-red-50">삭제</button>
+                </div>
+              </div>
+              <div class="text-slate-600 font-semibold">${escapeHtml(c.typeLabel)} ${(c.symptoms || []).map(s => '#' + escapeHtml(s)).join(' ')}</div>
+              ${c.memo ? `<div class="text-slate-600">내용: ${escapeHtml(c.memo)}</div>` : ''}
+              ${c.actionNote ? `<div class="text-emerald-700">조치: ${escapeHtml(c.actionNote)}</div>` : ''}
+              <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                <span>${formatDateTime(c.createdAt)} · 호출: ${escapeHtml(c.caller || '-')}</span>
+                <span>담당: ${escapeHtml(c.responder || '-')} / 소요: ${dur}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // CSV 다운로드
+    function downloadCSV() {
+      if (calls.length === 0) {
+        showToast('다운로드할 이력이 없습니다.');
+        return;
+      }
+      const headers = ['발생일시', '라인', '공정', '호출유형', '증상태그', '상세내용', '호출자', '상태', '담당자', '조치내용', '완료일시', '소요시간(분)'];
+      const rows = calls.map((c) => {
+        const statusKr = c.status === 'waiting' ? '대기중' : c.status === 'in_progress' ? '조치중' : '조치완료';
+        const durMin = c.completedAt ? ((c.completedAt - c.createdAt) / 60000).toFixed(1) : '';
+        return [
+          formatDateTime(c.createdAt),
+          c.line,
+          c.process,
+          c.typeLabel,
+          (c.symptoms || []).join(', '),
+          c.memo || '',
+          c.caller || '',
+          statusKr,
+          c.responder || '',
+          c.actionNote || '',
+          c.completedAt ? formatDateTime(c.completedAt) : '',
+          durMin
+        ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+      });
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `andon_history_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('CSV 파일이 다운로드되었습니다.');
+    }
+
+    // 설정 모달 (라인/공정 & 증상 태그)
+    function openSettingsModal(tab = 'lines') {
+      renderLineManager();
+      renderTagManager();
+      switchSettingsTab(tab);
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function switchSettingsTab(tab) {
+      const isLines = tab === 'lines';
+      document.getElementById('settingsPanelLines').classList.toggle('hidden', !isLines);
+      document.getElementById('settingsPanelTags').classList.toggle('hidden', isLines);
+      document.getElementById('settingsTabLines').className = isLines
+        ? 'py-2.5 text-blue-600 border-b-2 border-blue-600 bg-blue-50/40'
+        : 'py-2.5 text-slate-500 border-b-2 border-transparent';
+      document.getElementById('settingsTabTags').className = !isLines
+        ? 'py-2.5 text-blue-600 border-b-2 border-blue-600 bg-blue-50/40'
+        : 'py-2.5 text-slate-500 border-b-2 border-transparent';
+    }
+
+    function renderLineManager() {
+      const box = document.getElementById('lineManagerList');
+      box.innerHTML = linesConfig.map((line, idx) => `
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-extrabold text-slate-800">${escapeHtml(line.name)}</span>
+            <button onclick="deleteLine(${idx})" class="text-xs font-bold text-red-500 hover:underline">라인 삭제</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            ${(line.processes || []).map((p, pIdx) => `
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700">
+                ${escapeHtml(p)}
+                <button onclick="deleteProcess(${idx}, ${pIdx})" class="text-slate-400 hover:text-red-500 ml-0.5">×</button>
+              </span>
+            `).join('')}
+          </div>
+          <div class="flex gap-1.5">
+            <input id="newProc_${idx}" type="text" placeholder="세부 공정 추가 (예: 5공정)" class="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button onclick="addProcess(${idx})" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shrink-0">공정 추가</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addLine() {
+      const input = document.getElementById('newLineName');
+      const name = input.value.trim();
+      if (!name) return;
+      if (linesConfig.some(l => l.name === name)) {
+        showToast('이미 존재하는 라인 이름입니다.');
+        return;
+      }
+      linesConfig.push({ name, processes: ['1공정', '2공정'] });
+      input.value = '';
+      saveLinesConfig();
+      showToast(`'${name}' 라인이 추가되었습니다.`);
+    }
+
+    function deleteLine(idx) {
+      if (linesConfig.length <= 1) {
+        showToast('최소 1개의 라인은 유지해야 합니다.');
+        return;
+      }
+      const removed = linesConfig.splice(idx, 1)[0];
+      saveLinesConfig();
+      showToast(`'${removed.name}' 라인이 삭제되었습니다.`);
+    }
+
+    function addProcess(lineIdx) {
+      const input = document.getElementById(`newProc_${lineIdx}`);
+      const proc = input.value.trim();
+      if (!proc) return;
+      if (!linesConfig[lineIdx].processes) linesConfig[lineIdx].processes = [];
+      if (linesConfig[lineIdx].processes.includes(proc)) {
+        showToast('이미 존재하는 공정입니다.');
+        return;
+      }
+      linesConfig[lineIdx].processes.push(proc);
+      input.value = '';
+      saveLinesConfig();
+      showToast(`'${proc}' 공정이 추가되었습니다.`);
+    }
+
+    function deleteProcess(lineIdx, procIdx) {
+      if (linesConfig[lineIdx].processes.length <= 1) {
+        showToast('최소 1개의 공정은 유지해야 합니다.');
+        return;
+      }
+      linesConfig[lineIdx].processes.splice(procIdx, 1);
+      saveLinesConfig();
+    }
+
+    // 증상 태그 관리
+    function renderTagManager() {
+      const box = document.getElementById('tagManagerList');
+      box.innerHTML = CALL_TYPES.map((t) => {
+        const list = tagsConfig[t.id] || [];
+        return `
+          <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded-md text-xs font-extrabold ${t.badge}">${t.label}</span>
+              <span class="text-[11px] text-slate-400">${list.length}개</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              ${list.map((tag, tIdx) => `
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700">
+                  #${escapeHtml(tag)}
+                  <button onclick="deleteTag('${t.id}', ${tIdx})" class="text-slate-400 hover:text-red-500 ml-0.5">×</button>
+                </span>
+              `).join('')}
+            </div>
+            <div class="flex gap-1.5">
+              <input id="newTag_${t.id}" type="text" placeholder="새 증상 태그 입력" class="flex-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <button onclick="addTag('${t.id}')" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold shrink-0">태그 추가</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addTag(typeId) {
+      const input = document.getElementById(`newTag_${typeId}`);
+      const tag = input.value.trim();
+      if (!tag) return;
+      if (!tagsConfig[typeId]) tagsConfig[typeId] = [];
+      if (tagsConfig[typeId].includes(tag)) {
+        showToast('이미 존재하는 태그입니다.');
+        return;
+      }
+      tagsConfig[typeId].push(tag);
+      input.value = '';
+      saveTagsConfig();
+      showToast(`'#${tag}' 태그가 추가되었습니다.`);
+    }
+
+    function deleteTag(typeId, tagIdx) {
+      if (!tagsConfig[typeId]) return;
+      tagsConfig[typeId].splice(tagIdx, 1);
+      saveTagsConfig();
+    }
+
+    // Firebase 가이드 모달
+    function openFirebaseGuide() {
+      document.getElementById('guideCurrentState').textContent = isFirebaseMode
+        ? '✅ 현재 Firebase Firestore 실시간 DB와 정상 연동되어 있습니다.'
+        : '⚠️ 현재 로컬 데모 모드입니다. 다른 휴대폰과 실시간으로 공유하려면 아래 절차대로 Firebase 설정값을 입력해 주세요.';
+      document.getElementById('firebaseGuideModal').classList.remove('hidden');
+    }
+
+    function closeFirebaseGuide() {
+      document.getElementById('firebaseGuideModal').classList.add('hidden');
+    }
+
+    function copyFirestoreRules() {
+      const text = document.getElementById('firestoreRulesCode').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Firestore 보안 규칙이 복사되었습니다.');
+      }).catch(() => {
+        showToast('복사에 실패했습니다. 직접 드래그해 복사해 주세요.');
+      });
+    }
+
+    // 유틸리티
+    function toDatetimeLocalValue(ts) {
+      const d = new Date(ts);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function formatElapsed(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      const pad = n => String(n).padStart(2, '0');
+      return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+    }
+
+    function formatDurationMin(ms) {
+      const min = Math.max(0, ms / 60000);
+      if (min < 1) return `${Math.max(1, Math.round(ms / 1000))}초`;
+      return `${min.toFixed(1)}분`;
+    }
+
+    function formatTime(ts) {
+      if (!ts) return '-';
+      const d = new Date(ts);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function formatDateTime(ts) {
+      if (!ts) return '-';
+      const d = new Date(ts);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add('hidden'), 2600);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
