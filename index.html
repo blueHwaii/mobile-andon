@@ -152,15 +152,35 @@
 
     <!-- 탭 3: 이력 및 통계 -->
     <section id="tab-stats" class="hidden space-y-4">
-      <!-- 오늘의 KPI -->
+      <!-- 조회 기간 설정 카드 -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-700">조회 기간 설정</h3>
+          <span id="periodSummaryLabel" class="text-[11px] font-bold text-blue-600">전체 기간</span>
+        </div>
+        <div id="periodPresetBtns" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          <button type="button" data-preset="all" onclick="setDatePreset('all')" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition">전체</button>
+          <button type="button" data-preset="today" onclick="setDatePreset('today')" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition">오늘</button>
+          <button type="button" data-preset="7d" onclick="setDatePreset('7d')" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition">최근 7일</button>
+          <button type="button" data-preset="30d" onclick="setDatePreset('30d')" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition">최근 30일</button>
+          <button type="button" data-preset="month" onclick="setDatePreset('month')" class="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition">이번 달</button>
+        </div>
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <input id="historyStartDate" type="date" onchange="onCustomDateChange()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <span class="text-xs font-bold text-slate-400">~</span>
+          <input id="historyEndDate" type="date" onchange="onCustomDateChange()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+      </div>
+
+      <!-- 선택 기간 KPI -->
       <div class="grid grid-cols-3 gap-2">
         <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 text-center">
-          <div class="text-[11px] font-semibold text-slate-500">오늘 총 발생</div>
-          <div id="kpiTotalToday" class="text-2xl font-black text-slate-800 mt-1">0</div>
+          <div id="kpiTotalLabel" class="text-[11px] font-semibold text-slate-500">기간 총 발생</div>
+          <div id="kpiTotalPeriod" class="text-2xl font-black text-slate-800 mt-1">0</div>
         </div>
         <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 text-center">
           <div class="text-[11px] font-semibold text-slate-500">미조치</div>
-          <div id="kpiOpenToday" class="text-2xl font-black text-red-600 mt-1">0</div>
+          <div id="kpiOpenPeriod" class="text-2xl font-black text-red-600 mt-1">0</div>
         </div>
         <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 text-center">
           <div class="text-[11px] font-semibold text-slate-500">평균 조치</div>
@@ -168,14 +188,14 @@
         </div>
       </div>
 
-      <!-- 유형별 / 라인별 통계 -->
+      <!-- 유형별 / 라인별 통계 (선택 기간 기준) -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-4">
         <div>
-          <h3 class="text-xs font-bold text-slate-600 mb-2">유형별 발생 비중 (전체)</h3>
+          <h3 class="text-xs font-bold text-slate-600 mb-2">유형별 발생 비중 <span class="text-slate-400 font-normal">(선택 기간)</span></h3>
           <div id="statsByType" class="space-y-2"></div>
         </div>
         <div class="border-t border-slate-100 pt-3">
-          <h3 class="text-xs font-bold text-slate-600 mb-2">라인별 발생 건수 (전체)</h3>
+          <h3 class="text-xs font-bold text-slate-600 mb-2">라인별 발생 건수 <span class="text-slate-400 font-normal">(선택 기간)</span></h3>
           <div id="statsByLine" class="space-y-2"></div>
         </div>
       </div>
@@ -183,7 +203,7 @@
       <!-- 검색 / 필터 / DB 추가·삭제 / CSV 다운로드 -->
       <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
         <div class="flex items-center justify-between gap-2 flex-wrap">
-          <h3 class="text-sm font-bold text-slate-700">전체 이력 (DB 관리)</h3>
+          <h3 class="text-sm font-bold text-slate-700">이력 목록 (<span id="historyFilteredCount">0</span>건)</h3>
           <div class="flex items-center gap-1.5">
             <button onclick="openManualAddModal()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition">
               + 이력 추가
@@ -417,13 +437,13 @@ service cloud.firestore {
     // [여기만 수정하세요] 본인의 Firebase 설정값을 아래에 붙여넣으세요.
     // 비워두면 오류 없이 '로컬 데모 모드(브라우저 저장)'로 자동 실행됩니다.
     // =========================================================================
-   const firebaseConfig = {
-      apiKey: "AIzaSyD-xxxxxxxxxxxxxxxxxxxx",
-      authDomain: "m-andon.firebaseapp.com",
-      projectId: "m-andon",
-      storageBucket: "m-andon.firebasestorage.app",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abcdef123456"
+    const firebaseConfig = {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
     };
     // =========================================================================
 
@@ -486,6 +506,7 @@ service cloud.firestore {
     let selectedTags = new Set();
     let boardLineFilter = 'ALL';
     let boardTypeFilter = 'ALL';
+    let activeDatePreset = 'all'; // 'all' | 'today' | '7d' | '30d' | 'month' | 'custom'
     let soundEnabled = true;
     let currentTab = 'call';
     let actionTargetId = null;
@@ -502,6 +523,7 @@ service cloud.firestore {
       initFirebaseOrLocal();
       renderCallTypes();
       renderSymptomTags();
+      updatePresetButtonsUI();
 
       // URL 파라미터(?line=FEM 라인) 자동 선택 지원
       const params = new URLSearchParams(window.location.search);
@@ -587,7 +609,7 @@ service cloud.firestore {
         console.error('태그 설정 구독 오류:', err);
       });
 
-      db.collection('andon_calls').orderBy('createdAt', 'desc').limit(300).onSnapshot((snapshot) => {
+      db.collection('andon_calls').orderBy('createdAt', 'desc').limit(1000).onSnapshot((snapshot) => {
         const nextCalls = [];
         snapshot.forEach((doc) => {
           const d = doc.data();
@@ -1035,6 +1057,72 @@ service cloud.firestore {
       });
     }
 
+    // 조회 기간 프리셋 / 사용자 지정
+    function setDatePreset(preset) {
+      activeDatePreset = preset;
+      const startInput = document.getElementById('historyStartDate');
+      const endInput = document.getElementById('historyEndDate');
+      const now = new Date();
+      const todayYMD = formatDateYMD(now.getTime());
+
+      if (preset === 'all') {
+        startInput.value = '';
+        endInput.value = '';
+      } else if (preset === 'today') {
+        startInput.value = todayYMD;
+        endInput.value = todayYMD;
+      } else if (preset === '7d') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 6);
+        startInput.value = formatDateYMD(d.getTime());
+        endInput.value = todayYMD;
+      } else if (preset === '30d') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 29);
+        startInput.value = formatDateYMD(d.getTime());
+        endInput.value = todayYMD;
+      } else if (preset === 'month') {
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        startInput.value = formatDateYMD(firstDay.getTime());
+        endInput.value = todayYMD;
+      }
+
+      updatePresetButtonsUI();
+      renderStatsAndHistory();
+    }
+
+    function onCustomDateChange() {
+      const s = document.getElementById('historyStartDate').value;
+      const e = document.getElementById('historyEndDate').value;
+      if (s && e && s > e) {
+        document.getElementById('historyEndDate').value = s;
+      }
+      activeDatePreset = (!s && !e) ? 'all' : 'custom';
+      updatePresetButtonsUI();
+      renderStatsAndHistory();
+    }
+
+    function updatePresetButtonsUI() {
+      document.querySelectorAll('#periodPresetBtns button').forEach((btn) => {
+        const isActive = btn.getAttribute('data-preset') === activeDatePreset;
+        btn.className = isActive
+          ? 'px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition bg-slate-900 text-white border-slate-900'
+          : 'px-3 py-1.5 rounded-full text-xs font-bold shrink-0 border transition bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100';
+      });
+    }
+
+    function getPeriodFilteredCalls() {
+      const startVal = document.getElementById('historyStartDate')?.value || '';
+      const endVal = document.getElementById('historyEndDate')?.value || '';
+
+      return calls.filter((c) => {
+        const callYMD = formatDateYMD(c.createdAt);
+        if (startVal && callYMD < startVal) return false;
+        if (endVal && callYMD > endVal) return false;
+        return true;
+      });
+    }
+
     // DB 개별 삭제 / 전체 삭제
     function deleteCall(id) {
       if (!confirm('이 호출 기록을 DB에서 영구 삭제하시겠습니까?')) return;
@@ -1226,28 +1314,45 @@ service cloud.firestore {
       }
     }
 
-    // 탭 3: 이력 및 통계
+    // 탭 3: 이력 및 통계 (기간 설정 연동)
     function renderStatsAndHistory() {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const todayCalls = calls.filter(c => new Date(c.createdAt).toISOString().slice(0, 10) === todayStr);
-      const openToday = todayCalls.filter(c => c.status !== 'completed');
-      const completedToday = todayCalls.filter(c => c.status === 'completed' && c.completedAt);
+      const startVal = document.getElementById('historyStartDate')?.value || '';
+      const endVal = document.getElementById('historyEndDate')?.value || '';
 
-      document.getElementById('kpiTotalToday').textContent = todayCalls.length;
-      document.getElementById('kpiOpenToday').textContent = openToday.length;
+      // 기간 요약 텍스트 업데이트
+      const periodLabelEl = document.getElementById('periodSummaryLabel');
+      const kpiTotalLabelEl = document.getElementById('kpiTotalLabel');
+      if (!startVal && !endVal) {
+        periodLabelEl.textContent = '전체 기간';
+        kpiTotalLabelEl.textContent = '전체 발생';
+      } else if (startVal && endVal && startVal === endVal) {
+        periodLabelEl.textContent = startVal;
+        kpiTotalLabelEl.textContent = '선택일 발생';
+      } else {
+        periodLabelEl.textContent = `${startVal || '처음'} ~ ${endVal || '현재'}`;
+        kpiTotalLabelEl.textContent = '기간 총 발생';
+      }
 
-      if (completedToday.length > 0) {
-        const avgMs = completedToday.reduce((sum, c) => sum + Math.max(0, c.completedAt - c.createdAt), 0) / completedToday.length;
+      const periodCalls = getPeriodFilteredCalls();
+      const openCalls = periodCalls.filter(c => c.status !== 'completed');
+      const completedCalls = periodCalls.filter(c => c.status === 'completed' && c.completedAt);
+
+      document.getElementById('kpiTotalPeriod').textContent = periodCalls.length;
+      document.getElementById('kpiOpenPeriod').textContent = openCalls.length;
+
+      if (completedCalls.length > 0) {
+        const avgMs = completedCalls.reduce((sum, c) => sum + Math.max(0, c.completedAt - c.createdAt), 0) / completedCalls.length;
         document.getElementById('kpiAvgTime').textContent = formatDurationMin(avgMs);
       } else {
         document.getElementById('kpiAvgTime').textContent = '-';
       }
 
-      const total = calls.length || 1;
+      // 유형별 비중 (선택 기간 기준)
+      const total = periodCalls.length || 1;
       const typeStatsBox = document.getElementById('statsByType');
       typeStatsBox.innerHTML = CALL_TYPES.map((t) => {
-        const cnt = calls.filter(c => c.typeId === t.id).length;
-        const pct = calls.length ? Math.round((cnt / total) * 100) : 0;
+        const cnt = periodCalls.filter(c => c.typeId === t.id).length;
+        const pct = periodCalls.length ? Math.round((cnt / total) * 100) : 0;
         return `
           <div class="space-y-1">
             <div class="flex justify-between text-xs">
@@ -1261,12 +1366,13 @@ service cloud.firestore {
         `;
       }).join('');
 
+      // 라인별 건수 (선택 기간 기준)
       const lineMap = {};
-      calls.forEach(c => { lineMap[c.line] = (lineMap[c.line] || 0) + 1; });
+      periodCalls.forEach(c => { lineMap[c.line] = (lineMap[c.line] || 0) + 1; });
       const lineEntries = Object.entries(lineMap).sort((a, b) => b[1] - a[1]);
       const lineStatsBox = document.getElementById('statsByLine');
       if (lineEntries.length === 0) {
-        lineStatsBox.innerHTML = '<div class="text-xs text-slate-400">집계된 이력이 없습니다.</div>';
+        lineStatsBox.innerHTML = '<div class="text-xs text-slate-400">선택 기간 내 집계된 이력이 없습니다.</div>';
       } else {
         const maxCnt = lineEntries[0][1] || 1;
         lineStatsBox.innerHTML = lineEntries.map(([lineName, cnt]) => {
@@ -1285,10 +1391,11 @@ service cloud.firestore {
         }).join('');
       }
 
+      // 키워드 + 상태 필터 적용
       const keyword = (document.getElementById('historySearch').value || '').trim().toLowerCase();
       const statusFilter = document.getElementById('historyStatusFilter').value;
 
-      const filteredHistory = calls.filter((c) => {
+      const filteredHistory = periodCalls.filter((c) => {
         if (statusFilter !== 'ALL' && c.status !== statusFilter) return false;
         if (keyword) {
           const hay = `${c.line} ${c.process} ${c.typeLabel} ${(c.symptoms || []).join(' ')} ${c.memo} ${c.caller} ${c.responder} ${c.actionNote}`.toLowerCase();
@@ -1297,9 +1404,11 @@ service cloud.firestore {
         return true;
       });
 
+      document.getElementById('historyFilteredCount').textContent = filteredHistory.length;
+
       const listBox = document.getElementById('historyList');
       if (filteredHistory.length === 0) {
-        listBox.innerHTML = '<div class="py-6 text-center text-xs text-slate-400">조건에 맞는 이력이 없습니다.</div>';
+        listBox.innerHTML = '<div class="py-6 text-center text-xs text-slate-400">선택한 기간 및 조건에 맞는 이력이 없습니다.</div>';
       } else {
         listBox.innerHTML = filteredHistory.map((c) => {
           const statusLabel = c.status === 'waiting'
@@ -1330,14 +1439,28 @@ service cloud.firestore {
       }
     }
 
-    // CSV 다운로드
+    // CSV 다운로드 (선택한 기간·필터 기준)
     function downloadCSV() {
-      if (calls.length === 0) {
-        showToast('다운로드할 이력이 없습니다.');
+      const periodCalls = getPeriodFilteredCalls();
+      const keyword = (document.getElementById('historySearch').value || '').trim().toLowerCase();
+      const statusFilter = document.getElementById('historyStatusFilter').value;
+
+      const exportList = periodCalls.filter((c) => {
+        if (statusFilter !== 'ALL' && c.status !== statusFilter) return false;
+        if (keyword) {
+          const hay = `${c.line} ${c.process} ${c.typeLabel} ${(c.symptoms || []).join(' ')} ${c.memo} ${c.caller} ${c.responder} ${c.actionNote}`.toLowerCase();
+          if (!hay.includes(keyword)) return false;
+        }
+        return true;
+      });
+
+      if (exportList.length === 0) {
+        showToast('선택된 기간/조건에 다운로드할 이력이 없습니다.');
         return;
       }
+
       const headers = ['발생일시', '라인', '공정', '호출유형', '증상태그', '상세내용', '호출자', '상태', '담당자', '조치내용', '완료일시', '소요시간(분)'];
-      const rows = calls.map((c) => {
+      const rows = exportList.map((c) => {
         const statusKr = c.status === 'waiting' ? '대기중' : c.status === 'in_progress' ? '조치중' : '조치완료';
         const durMin = c.completedAt ? ((c.completedAt - c.createdAt) / 60000).toFixed(1) : '';
         return [
@@ -1356,17 +1479,21 @@ service cloud.firestore {
         ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
       });
 
+      const startVal = document.getElementById('historyStartDate')?.value || '';
+      const endVal = document.getElementById('historyEndDate')?.value || '';
+      const suffix = (startVal || endVal) ? `${startVal || 'start'}_${endVal || 'end'}` : formatDateYMD(Date.now());
+
       const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `andon_history_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `andon_history_${suffix}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('CSV 파일이 다운로드되었습니다.');
+      showToast(`CSV 다운로드 완료 (${exportList.length}건)`);
     }
 
     // 설정 모달 (라인/공정 & 증상 태그)
@@ -1536,6 +1663,12 @@ service cloud.firestore {
     }
 
     // 유틸리티
+    function formatDateYMD(ts) {
+      const d = new Date(ts);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
     function toDatetimeLocalValue(ts) {
       const d = new Date(ts);
       const pad = n => String(n).padStart(2, '0');
